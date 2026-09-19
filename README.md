@@ -291,21 +291,57 @@ and is never used to write.
 
 ## Installing in Home Assistant
 
+### From a public app repository
+
 1. **Settings → Add-ons → Add-on store → ⋮ → Repositories**, add
    `https://github.com/hhjcz/domaci-manual-app`.
 2. Install **Domácí manuál**, start it, and follow
    [GitHub deploy key setup](#github-deploy-key-setup).
 
+This route requires the *app* repository to be publicly readable. The
+Supervisor clones app repositories with a plain `git clone` and has no way to
+authenticate (`supervisor/store/git.py`). Nothing in this repository is
+sensitive — the deploy key is generated at runtime into `/data` — so making it
+public costs nothing. Your documentation repository stays private either way.
+
+### From a private app repository
+
+Install it as a local app instead. The Supervisor picks up anything under its
+local apps directory, which the Samba add-on exposes as the `addons` share.
+
+1. Install and start the **Samba share** add-on (or **Terminal & SSH**, or
+   **Studio Code Server**).
+2. Copy the `domaci_manual/` directory of this repository to the root of the
+   `addons` share, so it lands as `addons/domaci_manual/`:
+
+   ```bash
+   # from a clone of this repository, over the Samba share
+   rsync -a --delete domaci_manual/ /run/user/1000/gvfs/smb-share:server=homeassistant,share=addons/domaci_manual/
+
+   # or with the Terminal & SSH add-on, on the Home Assistant host
+   git clone git@github.com:hhjcz/domaci-manual-app.git /tmp/dm \
+     && rsync -a --delete /tmp/dm/domaci_manual/ /addons/domaci_manual/
+   ```
+
+3. **Settings → Add-ons → Add-on store → ⋮ → Check for updates**. *Domácí
+   manuál* appears under **Local add-ons**.
+4. Install and start it, then follow
+   [GitHub deploy key setup](#github-deploy-key-setup).
+
+Updating means repeating step 2 and pressing **Rebuild** on the add-on page.
+There are no update notifications, which is the real cost of this route.
+
+A third option exists — embedding a personal access token in the repository URL
+(`https://<token>@github.com/hhjcz/domaci-manual-app`) — and the Supervisor's
+URL validation and clone path do permit it. It is not recommended and not
+tested here: the token is stored in plain text in the Supervisor configuration,
+shown in the repositories dialog, and included in backups. It also reintroduces
+exactly the personal access token this project set out to avoid.
+
 The app has no prebuilt image, so the Supervisor builds it on your device on
 first install. That takes a few minutes on a Raspberry Pi. To publish prebuilt
 images later, add `image: ghcr.io/hhjcz/{arch}-addon-domaci-manual` to
 `domaci_manual/config.yaml` and run the `Publish` workflow.
-
-Adding this repository through the Home Assistant UI requires it to be publicly
-readable — the Supervisor clones add-on repositories with a plain `git clone`
-and has no way to authenticate. To keep it private, copy `domaci_manual/` into
-`/addons/local/` instead (via the Samba, Terminal & SSH or Studio Code Server
-add-on); everything else works the same.
 
 Supported architectures: `aarch64`, `amd64`.
 

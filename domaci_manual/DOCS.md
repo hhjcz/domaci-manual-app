@@ -8,6 +8,11 @@
 3. Start it once *before* configuring anything. It generates its own SSH key on
    the first start, and the panel shows you the public half.
 
+If that repository is private, Home Assistant cannot add it: the Supervisor
+clones app repositories without any credentials. Copy the `domaci_manual`
+directory into the root of the `addons` Samba share instead and use **Check for
+updates**; it then shows up under **Local add-ons**.
+
 ## Giving the app read access to your repository
 
 The app authenticates to GitHub with an SSH key it generates itself. The
