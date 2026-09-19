@@ -11,15 +11,18 @@ ENV PIP_BREAK_SYSTEM_PACKAGES=1 \
 WORKDIR /usr/src/app
 
 COPY requirements.txt ./
+
+# No compiler toolchain is installed: every dependency either ships a wheel
+# Alpine accepts or, like watchdog, has a pure-Python sdist. build-base would
+# add ~190MB of downloads to the build the Supervisor runs on the user's own
+# device. Add it back if a future dependency needs to compile.
 RUN \
     apk add --no-cache \
         git \
         openssh-client \
         python3 \
     && apk add --no-cache --virtual .build-deps \
-        build-base \
         py3-pip \
-        python3-dev \
     && pip install --no-cache-dir -r requirements.txt \
     && apk del --no-cache .build-deps \
     && find /usr/lib/python3*/site-packages \
