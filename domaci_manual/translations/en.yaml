@@ -14,6 +14,14 @@ configuration:
     description: >-
       Optional subdirectory inside the repository that holds the Markdown
       files. Leave empty to use the repository root.
+  exclude:
+    name: Exclude
+    description: >-
+      Files and folders to leave out of the site, one gitignore-style pattern
+      per entry, relative to the documentation root, for example `drafts/`,
+      `*.todo.md` or `private/notes.md`. Excluded pages are not published, not
+      linkable and not searchable. Prefix a pattern with `!` to re-include
+      something. Files and folders starting with a dot are always skipped.
   sync_interval:
     name: Sync interval (minutes)
     description: >-

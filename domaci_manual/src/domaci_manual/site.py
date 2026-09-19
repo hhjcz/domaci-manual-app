@@ -67,6 +67,10 @@ def mkdocs_config(options: Options, docs_dir: Path, site_dir: Path) -> dict:
         "site_dir": str(site_dir),
         "use_directory_urls": True,
         "strict": False,
+        # gitignore-style patterns, applied to paths relative to docs_dir.
+        # Excluded files are left out of the site entirely, so they are neither
+        # linkable nor searchable.
+        "exclude_docs": "\n".join(options.exclude),
         # Broken links are common in a hand-written knowledge base; warn, never
         # fail the build over them.
         "validation": {
@@ -212,7 +216,20 @@ async def build(options: Options, paths: Paths, docs_dir: Path) -> Path:
         if stripped:
             _LOGGER.debug("mkdocs: %s", stripped)
 
+    _check_landing_page(staging, options)
     return _promote(paths, staging)
+
+
+def _check_landing_page(staging: Path, options: Options) -> None:
+    """The ingress entry point must resolve to something."""
+    if (staging / "index.html").is_file():
+        return
+    raise BuildError(
+        "The documentation built without a landing page, so the app would show "
+        "a 404 when opened. This usually means the repository's root README.md "
+        "or index.md is matched by one of the 'exclude' patterns: "
+        f"{', '.join(options.exclude) or '(none configured)'}"
+    )
 
 
 def _promote(paths: Paths, staging: Path) -> Path:

@@ -108,6 +108,7 @@ with the app directory as the Docker build context.
 | `repository` | str | `""` | SSH URL of the documentation repository. HTTPS works for public repositories. |
 | `branch` | str | `main` | Branch to render. |
 | `docs_subdir` | str? | `""` | Subdirectory holding the Markdown. Empty = repository root. |
+| `exclude` | list(str) | `[]` | gitignore-style patterns for files and folders to keep out of the site. |
 | `sync_interval` | int 1–10080 | `15` | Minutes between upstream checks. |
 | `site_name` | str | `Domácí manuál` | Title of the rendered site. |
 | `language` | str | `en` | Material for MkDocs interface language, e.g. `cs`. |
@@ -137,6 +138,29 @@ network/network.md
 - Dot-directories (`.obsidian`, `.github`) are ignored.
 - If the repository root has no `README.md` or `index.md`, a small landing page
   is generated so the ingress entry point always resolves.
+
+### Keeping pages out of the site
+
+The `exclude` option takes gitignore-style patterns, relative to the
+documentation root:
+
+```yaml
+exclude:
+  - drafts/
+  - "*.todo.md"
+  - private/notes.md
+  - "!drafts/published.md"
+```
+
+An excluded page is left out of the build entirely, so it is not published, not
+reachable by URL and not in the search index — unlike hiding it from the
+navigation, which would leave the content served. Patterns are passed straight
+to MkDocs' own `exclude_docs`, so `!` re-includes and the usual gitignore
+matching rules apply.
+
+Excluding the root `README.md` would leave the site with no landing page; the
+build refuses to publish that rather than serving a 404 at the ingress entry
+point.
 
 `sample-docs/` in this repository is a working example.
 

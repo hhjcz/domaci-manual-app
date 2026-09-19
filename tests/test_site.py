@@ -126,3 +126,56 @@ async def test_no_external_font_requests(options, paths, docs_dir):
     index = (built / "index.html").read_text(encoding="utf-8")
     assert "fonts.googleapis.com" not in index
     assert "fonts.gstatic.com" not in index
+
+
+async def test_excluded_files_are_not_published(options, paths, docs_dir):
+    (docs_dir / "drafts").mkdir()
+    (docs_dir / "drafts" / "wip.md").write_text("# Work in progress\n", encoding="utf-8")
+    (docs_dir / "heating" / "boiler.todo.md").write_text("# Todo\n", encoding="utf-8")
+
+    excluding = dataclasses.replace(options, exclude=("drafts/", "*.todo.md"))
+    built = await site.build(excluding, paths, docs_dir)
+
+    assert not (built / "drafts").exists()
+    assert not (built / "heating/boiler.todo/index.html").exists()
+    # Still there: exclusion must not take the rest of the section with it.
+    assert (built / "heating/heat-pump/index.html").is_file()
+
+
+async def test_excluded_pages_leave_the_navigation_and_search_index(
+    options, paths, docs_dir
+):
+    (docs_dir / "secret.md").write_text("# Alarm code\n\nThe code is 1234.\n", "utf-8")
+
+    excluding = dataclasses.replace(options, exclude=("secret.md",))
+    built = await site.build(excluding, paths, docs_dir)
+
+    index = (built / "index.html").read_text(encoding="utf-8")
+    search = (built / "search/search_index.json").read_text(encoding="utf-8")
+    assert "Alarm code" not in index
+    assert "Alarm code" not in search
+    assert "1234" not in search
+
+
+async def test_exclude_supports_re_inclusion(options, paths, docs_dir):
+    (docs_dir / "drafts").mkdir()
+    (docs_dir / "drafts" / "wip.md").write_text("# Wip\n", encoding="utf-8")
+    (docs_dir / "drafts" / "keep.md").write_text("# Keep me\n", encoding="utf-8")
+
+    excluding = dataclasses.replace(options, exclude=("drafts/*", "!drafts/keep.md"))
+    built = await site.build(excluding, paths, docs_dir)
+
+    assert not (built / "drafts/wip/index.html").exists()
+    assert (built / "drafts/keep/index.html").is_file()
+
+
+async def test_no_exclusions_by_default(options, paths, tmp_path):
+    config = site.mkdocs_config(options, tmp_path / "docs", tmp_path / "site")
+    assert config["exclude_docs"] == ""
+
+
+async def test_excluding_the_landing_page_is_reported(options, paths, docs_dir):
+    excluding = dataclasses.replace(options, exclude=("README.md",))
+
+    with pytest.raises(site.BuildError, match="landing page"):
+        await site.build(excluding, paths, docs_dir)

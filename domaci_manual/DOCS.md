@@ -39,6 +39,7 @@ You do **not** need a personal access token.
 repository: git@github.com:you/domaci-manual.git
 branch: main
 docs_subdir: ""
+exclude: []
 sync_interval: 15
 site_name: Domácí manuál
 language: en
@@ -53,6 +54,7 @@ log_level: info
 | `repository` | SSH URL of the documentation repository. An HTTPS URL works for a public repository. |
 | `branch` | Branch to render. |
 | `docs_subdir` | Subdirectory inside the repository holding the Markdown. Empty means the repository root. |
+| `exclude` | Files and folders to leave out of the site, as gitignore-style patterns. |
 | `sync_interval` | Minutes between checks for new commits. The site is rebuilt only when the branch actually moved. |
 | `site_name` | Title shown at the top of the site. |
 | `language` | Interface language of the theme, for example `en` or `cs`. Your content is not translated. |
@@ -93,6 +95,28 @@ network/network.md
   folder is left out.
 - Images and other files next to your Markdown are published alongside it.
 
+### Hiding pages
+
+Use `exclude` to keep parts of the repository out of the published site:
+
+```yaml
+exclude:
+  - drafts/
+  - "*.todo.md"
+  - private/notes.md
+```
+
+Patterns are gitignore-style and relative to the documentation root. An
+excluded page is not published at all, so it cannot be opened by URL and does
+not appear in search — it is not merely hidden from the menu. Start a pattern
+with `!` to re-include something a previous pattern matched.
+
+Files and folders whose name starts with a dot, such as `.obsidian`, are always
+skipped and need no pattern.
+
+Do not exclude the root `README.md`: it is the site's front page, and the app
+will refuse to publish a site without one.
+
 ## Updating the documentation
 
 Push to the configured branch. The app notices within `sync_interval` minutes
@@ -112,6 +136,7 @@ manuál → Log**.
 | `Host key verification failed` | Non-GitHub host; add its key to `extra_known_hosts`. |
 | `Branch ... does not exist on the remote` | Wrong `branch`. |
 | `No Markdown files found` | Wrong `docs_subdir`, or an empty repository. |
+| `built without a landing page` | An `exclude` pattern matches the root `README.md`. |
 
 If a sync fails after the site has been built once, the app keeps serving the
 last good version and reports the failure in the log.

@@ -123,3 +123,46 @@ async def test_the_deploy_key_is_generated_on_the_first_cycle(running, paths):
     assert status.public_key.startswith("ssh-ed25519 ")
     assert status.deploy_key_source == "generated"
     assert (paths.ssh_dir / "id_ed25519").is_file()
+
+
+async def test_changing_an_option_rebuilds_without_a_new_commit(
+    running, paths, options
+):
+    """Editing `exclude` must take effect on the next sync, not the next push."""
+    coordinator, status, client = running
+    await coordinator._cycle()
+    assert (await client.get("/water/main-shutoff/")).status == 200
+    builds = status.builds
+
+    write_options(paths, options, exclude=["water/"])
+    await coordinator._cycle()
+
+    assert status.builds == builds + 1
+    assert (await client.get("/water/main-shutoff/")).status == 404
+    assert (await client.get("/heating/heat-pump/")).status == 200
+
+
+async def test_an_unchanged_option_set_does_not_rebuild(running, paths, options):
+    coordinator, status, _ = running
+    await coordinator._cycle()
+    builds = status.builds
+
+    write_options(paths, options)
+    await coordinator._cycle()
+
+    assert status.builds == builds
+
+
+async def test_excluding_the_landing_page_keeps_the_last_good_site(
+    running, paths, options
+):
+    coordinator, status, client = running
+    await coordinator._cycle()
+
+    write_options(paths, options, exclude=["README.md"])
+    await coordinator._cycle()
+
+    assert status.phase is Phase.ERROR
+    assert "landing page" in status.message
+    # The previously built site is still served rather than a 404.
+    assert (await client.get("/")).status == 200

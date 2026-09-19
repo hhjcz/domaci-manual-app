@@ -80,3 +80,21 @@ def test_load_round_trip(tmp_path):
     path = tmp_path / "options.json"
     path.write_text(json.dumps({"repository": "git@github.com:you/repo.git"}))
     assert Options.load(path).repository == "git@github.com:you/repo.git"
+
+
+def test_exclude_patterns_are_normalised():
+    options = Options.from_mapping(
+        {
+            "repository": "git@github.com:you/repo.git",
+            "exclude": ["  drafts/ ", "", "*.tmp"],
+        }
+    )
+    assert options.exclude == ("drafts/", "*.tmp")
+
+
+def test_exclude_accepts_a_bare_string():
+    assert Options.from_mapping({"exclude": "drafts/"}).exclude == ("drafts/",)
+
+
+def test_exclude_defaults_to_nothing():
+    assert Options().exclude == ()

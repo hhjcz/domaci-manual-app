@@ -86,6 +86,7 @@ class Options:
     sync_interval: int = 15  # minutes
     site_name: str = "Domácí manuál"
     language: str = "en"
+    exclude: tuple[str, ...] = field(default_factory=tuple)
     strict_host_key_checking: bool = True
     extra_known_hosts: tuple[str, ...] = field(default_factory=tuple)
     deploy_key: str = ""
@@ -94,6 +95,16 @@ class Options:
     @property
     def sync_interval_seconds(self) -> int:
         return self.sync_interval * 60
+
+    @property
+    def build_signature(self) -> tuple:
+        """The options that change the rendered output.
+
+        The site is rebuilt when this changes, not only when the repository
+        moved, so editing an option takes effect on the next sync rather than
+        waiting for the next commit.
+        """
+        return (self.docs_subdir, self.site_name, self.language, self.exclude)
 
     @property
     def uses_ssh(self) -> bool:
@@ -140,6 +151,9 @@ class Options:
         extra_hosts = raw.get("extra_known_hosts") or []
         if isinstance(extra_hosts, str):
             extra_hosts = [extra_hosts]
+        exclude = raw.get("exclude") or []
+        if isinstance(exclude, str):
+            exclude = [exclude]
         return cls(
             repository=str(raw.get("repository") or "").strip(),
             branch=str(raw.get("branch") or defaults.branch).strip(),
@@ -147,6 +161,9 @@ class Options:
             sync_interval=int(raw.get("sync_interval") or defaults.sync_interval),
             site_name=str(raw.get("site_name") or defaults.site_name).strip(),
             language=str(raw.get("language") or defaults.language).strip(),
+            exclude=tuple(
+                pattern.strip() for pattern in exclude if str(pattern).strip()
+            ),
             strict_host_key_checking=bool(
                 raw.get("strict_host_key_checking", defaults.strict_host_key_checking)
             ),

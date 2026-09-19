@@ -29,6 +29,7 @@ class Coordinator:
         self._status = status
         self._wakeup = asyncio.Event()
         self._failures = 0
+        self._built_with: tuple | None = None
 
     async def trigger(self) -> None:
         """Ask for a sync as soon as the loop is free."""
@@ -89,11 +90,16 @@ class Coordinator:
         self._status.commit_subject = result.subject
         self._status.syncs += 1
 
-        if result.changed or self._status.site_dir is None:
+        if (
+            result.changed
+            or self._status.site_dir is None
+            or self._built_with != options.build_signature
+        ):
             self._status.working(Phase.BUILDING, "Building the documentation")
             self._status.site_dir = await build(
                 options, self._paths, repository.docs_dir
             )
+            self._built_with = options.build_signature
             self._status.builds += 1
         else:
             _LOGGER.debug("No changes; keeping the current site")
