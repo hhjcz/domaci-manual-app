@@ -1,0 +1,60 @@
+---
+# Home Assistant App (add-on) manifest.
+# Schema reference: https://developers.home-assistant.io/docs/add-ons/configuration
+name: Domácí manuál
+version: "0.1.0"
+slug: domaci_manual
+description: >-
+  Renders a private Git repository of Markdown household documentation as a
+  read-only MkDocs Material site inside Home Assistant.
+url: https://github.com/hhjcz/domaci-manual-app
+arch:
+  - aarch64
+  - amd64
+
+# s6-overlay v3 from the Home Assistant base image runs the service.
+init: false
+
+# Ingress only. No host port is published, so the site is reachable exclusively
+# through the authenticated Home Assistant frontend (including Nabu Casa).
+ingress: true
+ingress_port: 8099
+panel_icon: mdi:book-open-variant
+panel_title: Domácí manuál
+# Non-admin Home Assistant users may open the sidebar panel.
+panel_admin: false
+
+# Only the app's own config directory, and only for reading an optional
+# user-supplied deploy key. Everything else lives in the private /data volume.
+map:
+  - type: addon_config
+    read_only: true
+
+# Restart the app if it stops answering. The health endpoint is reachable
+# without going through ingress, by design.
+watchdog: http://[HOST]:8099/_app/health
+
+options:
+  repository: ""
+  branch: main
+  docs_subdir: ""
+  sync_interval: 15
+  site_name: Domácí manuál
+  language: en
+  strict_host_key_checking: true
+  extra_known_hosts: []
+  deploy_key: ""
+  log_level: info
+
+schema:
+  repository: str
+  branch: str
+  docs_subdir: str?
+  sync_interval: int(1,10080)
+  site_name: str
+  language: str
+  strict_host_key_checking: bool
+  extra_known_hosts:
+    - str
+  deploy_key: str?
+  log_level: list(debug|info|warning|error)

@@ -1,0 +1,48 @@
+---
+# Publishing prebuilt images is optional. Until it is used, the Supervisor
+# builds the app on the user's device at install time.
+#
+# To switch to prebuilt images:
+#   1. Add `image: ghcr.io/<owner>/{arch}-addon-domaci-manual` to
+#      domaci_manual/config.yaml.
+#   2. Run this workflow, or add a `push: tags: ["v*"]` trigger below.
+name: Publish
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    name: Publish ${{ matrix.arch }} image
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: ["amd64", "aarch64"]
+        include:
+          - runs-on: ubuntu-24.04
+          - arch: aarch64
+            runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Log in to the container registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push
+        uses: home-assistant/builder@2026.02.1
+        with:
+          args: |
+            --${{ matrix.arch }} \
+            --target /data/domaci_manual \
+            --image "{arch}-addon-domaci-manual" \
+            --docker-hub "ghcr.io/${{ github.repository_owner }}" \
+            --addon

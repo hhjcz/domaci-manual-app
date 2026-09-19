@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{#
+  Theme overrides for Domácí manuál.
+
+  The site is served behind the Home Assistant ingress, whose URL prefix is
+  dynamic, so everything added here must use MkDocs' relative `base_url`
+  (for example `{{ base_url }}/assets/...`) and never an absolute path.
+
+  The future chat widget hooks in here:
+
+  {% block content %}
+    {{ super() }}
+    <div id="domaci-manual-chat"></div>
+  {% endblock %}
+#}

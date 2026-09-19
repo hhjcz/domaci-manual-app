@@ -1,0 +1,9 @@
+---
+ignored:
+  # Home Assistant app conventions: unpinned apk packages, ARG-based FROM,
+  # pip installs into the system interpreter.
+  - DL3006
+  - DL3018
+  - DL3013
+  - DL3059
+  - SC2086

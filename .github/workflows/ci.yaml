@@ -1,0 +1,72 @@
+---
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Python tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check .
+      - run: pytest -q
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Hadolint
+        uses: hadolint/hadolint-action@v3.3.0
+        with:
+          dockerfile: domaci_manual/Dockerfile
+          config: .hadolint.yaml
+      - name: YAMLLint
+        uses: frenck/action-yamllint@v1.5
+      - name: ShellCheck
+        uses: ludeeus/action-shellcheck@2.0.0
+        env:
+          SHELLCHECK_OPTS: -e SC1008 -s bash -x
+        with:
+          # s6 service scripts use a bashio shebang the action cannot detect.
+          additional_files: run finish
+
+  app:
+    name: Build ${{ matrix.arch }} app
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: ["amd64", "aarch64"]
+        include:
+          - runs-on: ubuntu-24.04
+          - arch: aarch64
+            runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Build
+        uses: home-assistant/builder@2026.02.1
+        with:
+          args: |
+            --test \
+            --${{ matrix.arch }} \
+            --target /data/domaci_manual \
+            --addon

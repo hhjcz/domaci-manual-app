@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="28" fill="#3F51B5"/>
+  <!-- roof: "home" -->
+  <path d="M64 16 L104 46 L96 46 L64 26 L32 46 L24 46 Z" fill="#FFFFFF" opacity="0.92"/>
+  <!-- open book: "manual" -->
+  <path d="M22 56 C38 48 54 50 63 58 L63 110 C54 102 38 100 22 108 Z" fill="#FFFFFF"/>
+  <path d="M106 56 C90 48 74 50 65 58 L65 110 C74 102 90 100 106 108 Z" fill="#FFFFFF" opacity="0.72"/>
+</svg>

@@ -1,0 +1,11 @@
+.dev/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# The VS Code tasks are part of the documented development workflow, so they
+# are tracked even if a global gitignore excludes .vscode/.
+!.vscode/
+!.vscode/tasks.json

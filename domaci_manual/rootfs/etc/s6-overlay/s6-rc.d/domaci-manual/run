@@ -1,0 +1,11 @@
+#!/command/with-contenv bashio
+# shellcheck shell=bash
+# ==============================================================================
+# Start the Domácí manuál service.
+#
+# All configuration is read from /data/options.json by the Python process, so
+# this script only has to hand over to it.
+# ==============================================================================
+bashio::log.info "Starting Domácí manuál..."
+
+exec python3 -m domaci_manual

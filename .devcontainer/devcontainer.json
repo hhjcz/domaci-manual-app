@@ -1,0 +1,48 @@
+{
+  // Home Assistant's official app (add-on) devcontainer. It runs a real
+  // Supervisor plus Home Assistant inside the container, so ingress can be
+  // tested the way users will experience it.
+  //
+  // Upstream reference:
+  // https://github.com/home-assistant/devcontainer/blob/main/apps/devcontainer.json
+  "name": "Domácí manuál app",
+  "image": "ghcr.io/home-assistant/devcontainer:6-apps",
+  "overrideCommand": false,
+  "remoteUser": "vscode",
+  "appPort": ["7123:8123", "7357:4357"],
+  "postStartCommand": "bash devcontainer_bootstrap",
+  "postCreateCommand": "bash .devcontainer/post_create.sh",
+  "runArgs": ["-e", "GIT_EDITOR=code --wait", "--privileged"],
+  // Supervisor scans this directory recursively for config.yaml, so mounting
+  // the repository root is enough to expose domaci_manual/ as a local app.
+  "workspaceFolder": "/mnt/supervisor/apps/local/${localWorkspaceFolderBasename}",
+  "workspaceMount": "source=${localWorkspaceFolder},target=${containerWorkspaceFolder},type=bind,consistency=cached",
+  "containerEnv": {
+    "WORKSPACE_DIRECTORY": "${containerWorkspaceFolder}",
+    // Switch to "beta" to test against an unreleased Supervisor.
+    "SUPERVISOR_CHANNEL": "stable"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "timonwong.shellcheck",
+        "esbenp.prettier-vscode",
+        "ms-python.python",
+        "charliermarsh.ruff"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "terminal.integrated.profiles.linux": { "zsh": { "path": "/usr/bin/zsh" } },
+        "editor.formatOnSave": true,
+        "files.trimTrailingWhitespace": true,
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python"
+      }
+    }
+  },
+  "mounts": [
+    "type=volume,target=/var/lib/docker",
+    "type=volume,target=/var/lib/containerd",
+    "type=volume,target=/mnt/supervisor",
+    "type=tmpfs,target=/tmp"
+  ]
+}

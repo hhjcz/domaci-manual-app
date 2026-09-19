@@ -1,0 +1,49 @@
+---
+configuration:
+  repository:
+    name: Repository
+    description: >-
+      SSH URL of the Git repository holding your Markdown documentation, for
+      example `git@github.com:you/domaci-manual.git`. An HTTPS URL works too,
+      but only for a public repository.
+  branch:
+    name: Branch
+    description: Branch to render, usually `main`.
+  docs_subdir:
+    name: Documentation subdirectory
+    description: >-
+      Optional subdirectory inside the repository that holds the Markdown
+      files. Leave empty to use the repository root.
+  sync_interval:
+    name: Sync interval (minutes)
+    description: >-
+      How often to check the repository for new commits. The documentation is
+      rebuilt only when something actually changed.
+  site_name:
+    name: Site name
+    description: Title shown at the top of the documentation site.
+  language:
+    name: Language
+    description: >-
+      Language of the site interface, as a Material for MkDocs language code,
+      for example `en` or `cs`. This does not translate your documentation.
+  strict_host_key_checking:
+    name: Strict host key checking
+    description: >-
+      Verify the SSH host key against the known hosts shipped with this app.
+      Turn this off only for a self-hosted Git server whose key you cannot add
+      to `extra_known_hosts`.
+  extra_known_hosts:
+    name: Extra known hosts
+    description: >-
+      Additional SSH host keys, one `known_hosts` line each, as produced by
+      `ssh-keyscan your-git-host`. GitHub is already included.
+  deploy_key:
+    name: Deploy key (optional)
+    description: >-
+      An OpenSSH private key to use instead of the one this app generates for
+      itself. Leave empty unless you manage deploy keys elsewhere. The key must
+      have no passphrase.
+  log_level:
+    name: Log level
+    description: Verbosity of the app log. Use `debug` when troubleshooting.

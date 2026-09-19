@@ -1,0 +1,18 @@
+[tool.pytest.ini_options]
+# The app package lives inside the add-on directory because the Supervisor
+# builds with that directory as the Docker context.
+pythonpath = ["domaci_manual/src"]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+# The GitHub end-to-end test is opt-in: `make e2e-github`.
+addopts = "-m 'not github'"
+markers = ["github: needs a real private GitHub repository and credentials"]
+filterwarnings = ["error::DeprecationWarning:domaci_manual.*"]
+
+[tool.ruff]
+line-length = 90
+target-version = "py312"
+src = ["domaci_manual/src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
