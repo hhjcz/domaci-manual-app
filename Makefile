@@ -9,8 +9,8 @@ PY         := $(VENV)/bin/python
 PIP        := $(VENV)/bin/pip
 HOST_PORT  ?= 8099
 
-# Matches build.yaml. Override for a cross-arch build.
-BUILD_FROM ?= ghcr.io/home-assistant/amd64-base:3.24-2026.06.1
+# Read from build.yaml so there is one source of truth for the base image.
+BUILD_FROM ?= $(shell sed -n 's/^  amd64: *//p' $(ADDON_DIR)/build.yaml)
 
 # Git inside the container reads the bind-mounted fixture, which is owned by the
 # host user; without this git refuses it as "dubious ownership".

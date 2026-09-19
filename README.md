@@ -298,8 +298,14 @@ and is never used to write.
 
 The app has no prebuilt image, so the Supervisor builds it on your device on
 first install. That takes a few minutes on a Raspberry Pi. To publish prebuilt
-images later, enable `.github/workflows/build.yaml` and add `image:` to
-`domaci_manual/config.yaml`.
+images later, add `image: ghcr.io/hhjcz/{arch}-addon-domaci-manual` to
+`domaci_manual/config.yaml` and run the `Publish` workflow.
+
+Adding this repository through the Home Assistant UI requires it to be publicly
+readable — the Supervisor clones add-on repositories with a plain `git clone`
+and has no way to authenticate. To keep it private, copy `domaci_manual/` into
+`/addons/local/` instead (via the Samba, Terminal & SSH or Studio Code Server
+add-on); everything else works the same.
 
 Supported architectures: `aarch64`, `amd64`.
 
