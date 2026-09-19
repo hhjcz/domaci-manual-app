@@ -14,3 +14,17 @@
     <div id="domaci-manual-chat"></div>
   {% endblock %}
 #}
+
+{% block extrahead %}
+  <style>
+    /*
+      Material centres the whole grid at 61rem (1220px at the default root font
+      size), which leaves wide empty margins on a desktop monitor. The two
+      12.1rem sidebars keep their width, so widening the grid goes entirely to
+      the reading column: roughly 736px -> 956px.
+    */
+    .md-grid {
+      max-width: 72rem;
+    }
+  </style>
+{% endblock %}

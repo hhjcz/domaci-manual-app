@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1
+
+- Wider content area on desktop: the page grid grows from Material's default
+  61rem to 72rem, which goes entirely to the reading column.
+
 ## 0.2.0
 
 - New `exclude` option: gitignore-style patterns for files and folders to keep

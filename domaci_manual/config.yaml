@@ -2,7 +2,7 @@
 # Home Assistant App (add-on) manifest.
 # Schema reference: https://developers.home-assistant.io/docs/add-ons/configuration
 name: Domácí manuál
-version: "0.2.0"
+version: "0.2.1"
 slug: domaci_manual
 description: >-
   Renders a private Git repository of Markdown household documentation as a

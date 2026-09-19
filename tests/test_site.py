@@ -128,6 +128,15 @@ async def test_no_external_font_requests(options, paths, docs_dir):
     assert "fonts.gstatic.com" not in index
 
 
+async def test_content_grid_is_widened(options, paths, docs_dir):
+    """The theme override must survive into every rendered page."""
+    built = await site.build(options, paths, docs_dir)
+    for page in ("index.html", "heating/heat-pump/index.html"):
+        markup = (built / page).read_text(encoding="utf-8")
+        assert ".md-grid" in markup
+        assert "max-width: 72rem" in markup
+
+
 async def test_excluded_files_are_not_published(options, paths, docs_dir):
     (docs_dir / "drafts").mkdir()
     (docs_dir / "drafts" / "wip.md").write_text("# Work in progress\n", encoding="utf-8")
