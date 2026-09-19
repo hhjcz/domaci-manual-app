@@ -73,7 +73,7 @@ jobs:
           echo "build_from=$build_from" >> "$GITHUB_OUTPUT"
 
       - name: Build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: domaci_manual
           push: false
