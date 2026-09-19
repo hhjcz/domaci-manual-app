@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0
+
+- The manual is now served after a restart with no network. Previously a failed
+  sync on startup left nothing to render and the panel showed an error page,
+  even though a complete checkout was sitting in `/data` — the worst case being
+  a power cut, which reboots the house and takes the internet with it. The app
+  now builds from the local checkout and catches up once the remote is
+  reachable again.
+
 ## 0.2.1
 
 - Wider content area on desktop: the page grid grows from Material's default

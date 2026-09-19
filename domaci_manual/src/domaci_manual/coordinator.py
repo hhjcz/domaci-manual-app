@@ -11,7 +11,7 @@ import logging
 import time
 
 from .config import ConfigError, Options, Paths
-from .gitsync import GitError, Repository
+from .gitsync import GitError, Repository, SyncResult
 from .site import BuildError, build
 from .ssh import prepare as prepare_ssh
 from .state import Phase, Status
@@ -85,11 +85,25 @@ class Coordinator:
 
         repository = Repository(options, self._paths, credentials)
         self._status.working(Phase.SYNCING, "Checking for documentation updates")
-        result = await repository.sync()
+        try:
+            result = await repository.sync()
+        except GitError as err:
+            await self._fall_back_to_the_local_copy(options, repository, err)
+            raise
         self._status.commit = result.commit
         self._status.commit_subject = result.subject
         self._status.syncs += 1
 
+        await self._build_if_needed(options, repository, result)
+
+        self._status.phase = Phase.READY
+        self._status.message = f"Up to date at {result.commit[:8]}"
+        self._status.detail = ""
+        self._status.last_success_at = time.time()
+
+    async def _build_if_needed(
+        self, options: Options, repository: Repository, result: SyncResult
+    ) -> None:
         if (
             result.changed
             or self._status.site_dir is None
@@ -104,10 +118,38 @@ class Coordinator:
         else:
             _LOGGER.debug("No changes; keeping the current site")
 
-        self._status.phase = Phase.READY
-        self._status.message = f"Up to date at {result.commit[:8]}"
-        self._status.detail = ""
-        self._status.last_success_at = time.time()
+    async def _fall_back_to_the_local_copy(
+        self, options: Options, repository: Repository, err: GitError
+    ) -> None:
+        """Serve the checkout we already have when the remote is unreachable.
+
+        A household manual is wanted most right after a power cut, when the
+        house reboots and the internet may still be down. The checkout in
+        /data outlives restarts, so render it rather than greeting whoever
+        needs the water shut-off with an error page.
+
+        The build uses the options in force now, not the ones the previous
+        site was built with, so a page excluded in the meantime stays hidden.
+        The caller still reports the sync failure: this only decides what is
+        on screen while it lasts.
+        """
+        local = await repository.local_state()
+        if local is None:
+            return
+
+        _LOGGER.warning(
+            "%s. Falling back to the local copy of the documentation at %s.",
+            err.message,
+            local.commit[:8],
+        )
+        self._status.commit = local.commit
+        self._status.commit_subject = local.subject
+        try:
+            await self._build_if_needed(options, repository, local)
+        except BuildError as build_err:
+            # The sync error is the one worth reporting; keep going so the
+            # caller records it rather than replacing it with this one.
+            _LOGGER.error("The local copy did not build either: %s", build_err.message)
 
     def _fail(self, message: str, detail: str) -> None:
         self._status.failed(message, detail)

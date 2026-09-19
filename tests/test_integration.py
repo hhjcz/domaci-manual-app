@@ -6,6 +6,8 @@ tests/test_github_e2e.py, and it needs no network.
 
 from __future__ import annotations
 
+import shutil
+
 import pytest
 
 from conftest import push_change, write_options
@@ -166,3 +168,74 @@ async def test_excluding_the_landing_page_keeps_the_last_good_site(
     assert "landing page" in status.message
     # The previously built site is still served rather than a 404.
     assert (await client.get("/")).status == 200
+
+
+async def restart(aiohttp_client, paths):
+    """A fresh process against the same /data, as after a reboot."""
+    status = Status()
+    coordinator = Coordinator(paths, status)
+    client = await aiohttp_client(server.create_app(status, coordinator.trigger))
+    return coordinator, status, client
+
+
+async def test_a_restart_without_the_network_serves_the_local_copy(
+    running, aiohttp_client, paths, docs_remote
+):
+    """The manual is wanted most right after a power cut, before the net is up."""
+    coordinator, _status, _client = running
+    await coordinator._cycle()
+
+    shutil.rmtree(docs_remote)  # the remote is unreachable
+    coordinator, status, client = await restart(aiohttp_client, paths)
+    await coordinator._cycle()
+
+    assert status.phase is Phase.ERROR  # the failure is still reported
+    assert status.ready
+    assert "Household manual" in await (await client.get("/")).text()
+    assert "Heat pump" in await (await client.get("/heating/heat-pump/")).text()
+
+
+async def test_the_local_copy_is_built_with_the_current_options(
+    running, aiohttp_client, paths, options, docs_remote
+):
+    """An option changed while offline still applies; excluded stays excluded."""
+    coordinator, _status, _client = running
+    await coordinator._cycle()
+
+    write_options(paths, options, exclude=["heating/heat-pump.md"])
+    shutil.rmtree(docs_remote)
+    coordinator, status, client = await restart(aiohttp_client, paths)
+    await coordinator._cycle()
+
+    assert status.ready
+    assert (await client.get("/heating/heat-pump/")).status == 404
+
+
+async def test_a_restart_without_a_checkout_reports_the_error(
+    aiohttp_client, paths, options, docs_remote
+):
+    """With nothing cloned yet there is nothing to fall back on."""
+    write_options(paths, options)
+    shutil.rmtree(docs_remote)
+    coordinator, status, client = await restart(aiohttp_client, paths)
+
+    await coordinator._cycle()
+
+    assert status.phase is Phase.ERROR
+    assert not status.ready
+    assert "Domácí manuál" in await (await client.get("/")).text()
+
+
+async def test_the_checkout_of_another_repository_is_not_served(
+    running, aiohttp_client, paths, options
+):
+    """Pointing the app elsewhere must not resurrect the previous content."""
+    coordinator, _status, _client = running
+    await coordinator._cycle()
+
+    write_options(paths, options, repository="file:///nonexistent/repo.git")
+    coordinator, status, _client = await restart(aiohttp_client, paths)
+    await coordinator._cycle()
+
+    assert status.phase is Phase.ERROR
+    assert not status.ready

@@ -61,6 +61,16 @@ succeeds does the server start serving it. A failed build or sync therefore
 never replaces a working site — the previous generation keeps being served and
 the failure is reported in the log and on `/_app/status`.
 
+**Offline starts.** A sync failure does not stop the app from rendering. If the
+remote is unreachable but `/data/repo` holds a checkout of the repository that
+is still configured, the coordinator builds from that checkout and serves it,
+then reports the sync failure as usual. This is what makes the manual survive
+the case it exists for: the power comes back, the house reboots and the router
+is not up yet, and somebody needs to know how to restart the heat pump. The
+build uses the options in force at that moment, so a page excluded in the
+meantime does not reappear, and a checkout left over from a repository the user
+has since pointed away from is never served.
+
 **Ingress.** Home Assistant proxies the app under a dynamic prefix
 (`/api/hassio_ingress/<token>/`) which the Supervisor strips before forwarding,
 passing it in the `X-Ingress-Path` header. MkDocs is configured without

@@ -141,6 +141,13 @@ manuál → Log**.
 If a sync fails after the site has been built once, the app keeps serving the
 last good version and reports the failure in the log.
 
+The same holds after a restart with no working internet, which is exactly the
+situation a power cut creates: the app renders the copy of the repository it
+already has in `/data` and serves the manual as usual, while the log explains
+that the remote could not be reached. It catches up on its own once the network
+is back. Only a first start — before anything has ever been cloned — has
+nothing to show.
+
 ## Security
 
 - Ingress only. No port is published on your network; the site is reachable

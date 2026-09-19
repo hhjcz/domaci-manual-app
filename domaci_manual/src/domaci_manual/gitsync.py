@@ -74,6 +74,22 @@ class Repository:
         self._check_docs_dir()
         return SyncResult(changed=changed, commit=commit, subject=subject)
 
+    async def local_state(self) -> SyncResult | None:
+        """Describe the existing checkout without touching the network.
+
+        Returns None when there is nothing usable to fall back on: no checkout
+        yet, or one belonging to a repository or branch the user has since
+        moved away from. Content from a repository that is no longer configured
+        must never be served.
+        """
+        if self._needs_fresh_clone() or not self.docs_dir.is_dir():
+            return None
+        try:
+            commit, subject = await self._head()
+        except GitError:
+            return None
+        return SyncResult(changed=False, commit=commit, subject=subject)
+
     # -- clone / pull ----------------------------------------------------
 
     def _needs_fresh_clone(self) -> bool:
